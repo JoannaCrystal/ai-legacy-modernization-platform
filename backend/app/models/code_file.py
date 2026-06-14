@@ -7,6 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database.base import Base
 
 if TYPE_CHECKING:
+    from app.models.code_analysis import CodeClass, CodeDependency
     from app.models.project import Project
 
 
@@ -31,3 +32,9 @@ class CodeFile(Base):
     )
 
     project: Mapped["Project"] = relationship(back_populates="code_files")
+    classes: Mapped[list["CodeClass"]] = relationship(
+        back_populates="code_file",
+    )
+    dependencies: Mapped[list["CodeDependency"]] = relationship(
+        back_populates="code_file",
+    )

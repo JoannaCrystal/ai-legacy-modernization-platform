@@ -5,7 +5,13 @@ from sqlalchemy import engine_from_config, pool
 
 from app.core.config import settings
 from app.database.base import Base
-from app.models import CodeFile, Project  # noqa: F401
+from app.models import (  # noqa: F401
+    CodeClass,
+    CodeDependency,
+    CodeFile,
+    CodeMethod,
+    Project,
+)
 
 config = context.config
 
