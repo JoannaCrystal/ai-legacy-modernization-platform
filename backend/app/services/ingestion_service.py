@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.models.code_file import CodeFile
 from app.models.project import Project
+from app.services.code_analysis_service import analyze_code_file
 
 IGNORED_DIRS = {".git", "target", "build", "node_modules", "__pycache__"}
 
@@ -104,16 +105,17 @@ def ingest_zip_archive(
     extracted_files = _extract_source_files(zip_bytes)
 
     for extracted_file in extracted_files:
-        db.add(
-            CodeFile(
-                project_id=project.id,
-                file_path=extracted_file.file_path,
-                file_name=extracted_file.file_name,
-                language=extracted_file.language,
-                file_size=extracted_file.file_size,
-                content=extracted_file.content,
-            )
+        code_file = CodeFile(
+            project_id=project.id,
+            file_path=extracted_file.file_path,
+            file_name=extracted_file.file_name,
+            language=extracted_file.language,
+            file_size=extracted_file.file_size,
+            content=extracted_file.content,
         )
+        db.add(code_file)
+        db.flush()
+        analyze_code_file(db, code_file)
 
     db.commit()
     db.refresh(project)
