@@ -8,38 +8,108 @@ IMPORT_PATTERN = re.compile(
     re.MULTILINE,
 )
 CLASS_PATTERN = re.compile(
-    r"(?:public\s+|private\s+|protected\s+)?"
-    r"(?:abstract\s+|final\s+)?"
+    r"^\s*"
+    r"(?:(?:public|private|protected)\s+)?"
+    r"(?:(?:abstract|final)\s+)*"
     r"class\s+(\w+)",
     re.MULTILINE,
 )
+METHOD_PATTERN = re.compile(
+    r"^\s*"
+    r"(?!if\s*\(|for\s*\(|while\s*\(|switch\s*\(|catch\s*\()"
+    r"(?:(?:public|private|protected)\s+)?"
+    r"(?:(?:static|final|synchronized|native|abstract|strictfp)\s+)*"
+    r"(?P<return_type>void|[\w<>,\[\]?]+)\s+"
+    r"(?P<name>\w+)\s*"
+    r"\((?P<parameters>[^)]*)\)"
+    r"(?:\s*throws\s+[\w.\s,]+)?"
+    r"\s*(?:\{|;)",
+    re.MULTILINE,
+)
+
+INVALID_IDENTIFIERS = {
+    "if",
+    "for",
+    "while",
+    "switch",
+    "catch",
+    "return",
+    "throw",
+    "new",
+    "else",
+    "do",
+    "try",
+    "finally",
+    "class",
+    "interface",
+    "enum",
+    "import",
+    "package",
+    "super",
+    "this",
+    "case",
+    "default",
+    "break",
+    "continue",
+}
 
 
 class JavaAnalyzer(BaseAnalyzer):
     def analyze(self, content: str) -> dict[str, Any]:
         classes = self._extract_classes(content)
-        dependencies = self._extract_imports(content)
+        methods = self._extract_methods(content)
+        dependencies = self._extract_dependencies(content)
 
         return {
             "classes": classes,
-            "methods": [],
+            "methods": methods,
             "dependencies": dependencies,
         }
 
-    def _extract_classes(self, content: str) -> list[dict[str, str]]:
+    def _extract_classes(self, content: str) -> list[dict[str, str | int]]:
         seen: set[str] = set()
-        classes: list[dict[str, str]] = []
+        classes: list[dict[str, str | int]] = []
 
         for match in CLASS_PATTERN.finditer(content):
             name = match.group(1)
             if name in seen:
                 continue
             seen.add(name)
-            classes.append({"name": name})
+            classes.append(
+                {
+                    "name": name,
+                    "start_line": self._line_number(content, match.start()),
+                }
+            )
 
         return classes
 
-    def _extract_imports(self, content: str) -> list[dict[str, str]]:
+    def _extract_methods(self, content: str) -> list[dict[str, str | int]]:
+        methods: list[dict[str, str | int]] = []
+
+        for match in METHOD_PATTERN.finditer(content):
+            return_type = match.group("return_type").strip()
+            name = match.group("name").strip()
+            parameters = match.group("parameters").strip()
+
+            if (
+                return_type in INVALID_IDENTIFIERS
+                or name in INVALID_IDENTIFIERS
+            ):
+                continue
+
+            methods.append(
+                {
+                    "name": name,
+                    "return_type": return_type,
+                    "parameters": parameters,
+                    "start_line": self._line_number(content, match.start()),
+                }
+            )
+
+        return methods
+
+    def _extract_dependencies(self, content: str) -> list[dict[str, str]]:
         seen: set[str] = set()
         dependencies: list[dict[str, str]] = []
 
@@ -51,3 +121,6 @@ class JavaAnalyzer(BaseAnalyzer):
             dependencies.append({"name": name, "type": "IMPORT"})
 
         return dependencies
+
+    def _line_number(self, content: str, index: int) -> int:
+        return content.count("\n", 0, index) + 1
