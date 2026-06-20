@@ -1,11 +1,12 @@
-from typing import TypedDict
+from typing import NotRequired, TypedDict
 
 
 class ModernizationState(TypedDict):
-    project_id: str
-    classes: list[str]
-    methods: list[str]
-    dependencies: list[str]
-    dependency_findings: list[str]
-    risk_findings: list[str]
-    modernization_recommendations: list[str]
+    project_id: int
+    classes: list
+    methods: list
+    dependencies: list
+    code_analysis: NotRequired[dict]
+    dependency_analysis: NotRequired[dict]
+    risk_analysis: NotRequired[dict]
+    modernization_plan: NotRequired[dict]
