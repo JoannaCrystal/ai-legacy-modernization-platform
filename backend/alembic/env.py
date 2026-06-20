@@ -10,6 +10,7 @@ from app.models import (  # noqa: F401
     CodeDependency,
     CodeFile,
     CodeMethod,
+    KnowledgeDocument,
     Project,
 )
 
