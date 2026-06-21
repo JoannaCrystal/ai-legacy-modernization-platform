@@ -20,6 +20,7 @@ class ModernizationAgent(BaseAgent):
         dependency_analysis = state.get("dependency_analysis", {})
         risk_analysis = state.get("risk_analysis", {})
         dependencies = state.get("dependencies", [])
+        retrieved_context = state.get("retrieved_context", [])
 
         if not code_analysis or not dependency_analysis or not risk_analysis:
             logger.warning(
@@ -31,6 +32,7 @@ class ModernizationAgent(BaseAgent):
             "dependency_analysis": dependency_analysis,
             "risk_analysis": risk_analysis,
             "dependencies": dependencies,
+            "retrieved_context": retrieved_context,
         }
 
         try:

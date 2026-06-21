@@ -9,4 +9,5 @@ class ModernizationState(TypedDict):
     code_analysis: NotRequired[dict]
     dependency_analysis: NotRequired[dict]
     risk_analysis: NotRequired[dict]
+    retrieved_context: NotRequired[list[str]]
     modernization_plan: NotRequired[dict]

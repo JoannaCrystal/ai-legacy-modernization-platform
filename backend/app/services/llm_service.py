@@ -26,6 +26,8 @@ Focus on:
 Rules:
 Only use provided facts.
 Do not invent technologies.
+Use the provided enterprise knowledge as the primary source when creating
+modernization recommendations.
 Return concise enterprise recommendations.
 
 Respond with valid JSON only using this structure:
@@ -51,7 +53,10 @@ risk_analysis:
 {risk_analysis}
 
 dependencies:
-{dependencies}""",
+{dependencies}
+
+Relevant Enterprise Knowledge:
+{retrieved_context}""",
         ),
     ]
 )
@@ -71,6 +76,14 @@ class LLMService:
         return self._llm
 
     def generate_modernization_strategy(self, context: dict) -> dict:
+        retrieved_context = context.get("retrieved_context", [])
+        if retrieved_context:
+            retrieved_context_text = "\n".join(
+                f"- {item}" for item in retrieved_context
+            )
+        else:
+            retrieved_context_text = "No enterprise knowledge retrieved."
+
         prompt = MODERNIZATION_PROMPT.format_messages(
             code_analysis=json.dumps(
                 context.get("code_analysis", {}),
@@ -88,6 +101,7 @@ class LLMService:
                 context.get("dependencies", []),
                 indent=2,
             ),
+            retrieved_context=retrieved_context_text,
         )
 
         response = self.llm.invoke(prompt)
