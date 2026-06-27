@@ -12,7 +12,7 @@ class KnowledgeAgent(BaseAgent):
     name = "knowledge_agent"
 
     def execute(self, state: ModernizationState) -> ModernizationState:
-        logger.info("Executing %s", self.name)
+        self._log_pipeline_step()
 
         query = self._build_retrieval_query(state)
         retrieved_context: list[str] = []

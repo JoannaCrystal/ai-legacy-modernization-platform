@@ -7,8 +7,8 @@ from app.services.llm_service import LLMService
 logger = logging.getLogger(__name__)
 
 
-class ArchitectureUnderstandingAgent(BaseAgent):
-    name = "architecture_understanding_agent"
+class BusinessCapabilityAgent(BaseAgent):
+    name = "business_capability_agent"
 
     def __init__(self) -> None:
         self.llm_service = LLMService()
@@ -17,23 +17,20 @@ class ArchitectureUnderstandingAgent(BaseAgent):
         self._log_pipeline_step()
 
         context = {
-            "classes": state.get("classes", []),
-            "methods": state.get("methods", []),
-            "dependencies": state.get("dependencies", []),
+            "architecture_summary": state.get("architecture_summary", {}),
             "code_analysis": state.get("code_analysis", {}),
             "dependency_analysis": state.get("dependency_analysis", {}),
-            "risk_analysis": state.get("risk_analysis", {}),
         }
 
         try:
-            architecture_summary = (
-                self.llm_service.generate_architecture_summary(context)
+            business_capabilities = (
+                self.llm_service.generate_business_capabilities(context)
             )
-            state["architecture_summary"] = architecture_summary
+            state["business_capabilities"] = business_capabilities
         except Exception as exc:
             logger.error(
                 "%s LLM generation failed: %s", self.name, exc, exc_info=True
             )
-            state["architecture_summary"] = {"components": []}
+            state["business_capabilities"] = {"capabilities": []}
 
         return state

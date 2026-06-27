@@ -10,7 +10,7 @@ class DependencyAgent(BaseAgent):
     name = "dependency_agent"
 
     def execute(self, state: ModernizationState) -> ModernizationState:
-        logger.info("Executing %s", self.name)
+        self._log_pipeline_step()
 
         dependencies = state.get("dependencies", [])
         high_risk_dependencies = [

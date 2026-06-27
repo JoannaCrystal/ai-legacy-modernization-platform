@@ -168,6 +168,24 @@ def test_graph_runs_architecture_agent_before_knowledge_and_modernization(
     )
     graph_module.architecture_agent.llm_service = architecture_llm
 
+    business_llm = MagicMock()
+    business_llm.generate_business_capabilities.return_value = {
+        "capabilities": []
+    }
+    graph_module.business_capability_agent.llm_service = business_llm
+
+    documentation_llm = MagicMock()
+    documentation_llm.generate_architecture_report.return_value = {
+        "application_overview": "",
+        "architecture_summary": "",
+        "components": [],
+        "business_capabilities": [],
+        "technology_summary": "",
+        "technical_risks": [],
+        "modernization_opportunities": [],
+    }
+    graph_module.documentation_agent.llm_service = documentation_llm
+
     modernization_llm = MagicMock()
     modernization_llm.generate_modernization_strategy.return_value = (
         SAMPLE_MODERNIZATION

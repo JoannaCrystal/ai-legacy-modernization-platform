@@ -9,17 +9,20 @@ logger = logging.getLogger(__name__)
 
 class ModernizationAgent(BaseAgent):
     name = "modernization_agent"
+    is_pipeline_final = True
 
     def __init__(self) -> None:
         self.llm_service = LLMService()
 
     def execute(self, state: ModernizationState) -> ModernizationState:
-        logger.info("Executing %s", self.name)
+        self._log_pipeline_step()
 
         code_analysis = state.get("code_analysis", {})
         dependency_analysis = state.get("dependency_analysis", {})
         risk_analysis = state.get("risk_analysis", {})
         architecture_summary = state.get("architecture_summary", {})
+        business_capabilities = state.get("business_capabilities", {})
+        architecture_report = state.get("architecture_report", {})
         dependencies = state.get("dependencies", [])
         retrieved_context = state.get("retrieved_context", [])
 
@@ -33,6 +36,8 @@ class ModernizationAgent(BaseAgent):
             "dependency_analysis": dependency_analysis,
             "risk_analysis": risk_analysis,
             "architecture_summary": architecture_summary,
+            "business_capabilities": business_capabilities,
+            "architecture_report": architecture_report,
             "dependencies": dependencies,
             "retrieved_context": retrieved_context,
         }

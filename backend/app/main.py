@@ -1,9 +1,17 @@
+import logging
+
 from fastapi import FastAPI
 
 from app.api.analysis import router as analysis_router
 from app.api.knowledge import router as knowledge_router
 from app.api.modernization import router as modernization_router
 from app.api.projects import router as projects_router
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(message)s",
+    force=True,
+)
 
 app = FastAPI(
     title="AI Legacy Modernization Platform",
