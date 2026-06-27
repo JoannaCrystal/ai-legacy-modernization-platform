@@ -7,6 +7,64 @@ from langchain_openai import ChatOpenAI
 
 logger = logging.getLogger(__name__)
 
+ARCHITECTURE_PROMPT = ChatPromptTemplate.from_messages(
+    [
+        (
+            "system",
+            """You are an enterprise software architect.
+
+Your job:
+Infer the high-level architecture of a legacy application by grouping \
+related classes into logical components.
+
+You must only use the provided structured metadata (classes, methods, \
+packages, dependencies, and upstream analysis). Do not invent classes or \
+technologies that are not present in the input.
+
+Rules:
+- Infer component names dynamically from class names, packages, and \
+responsibilities.
+- Every listed class must belong to exactly one component.
+- Use class names exactly as provided.
+- Return valid JSON only.
+
+Respond with valid JSON only using this structure:
+{{
+  "components": [
+    {{
+      "name": "...",
+      "responsibility": "...",
+      "classes": ["...", "..."]
+    }}
+  ]
+}}""",
+        ),
+        (
+            "human",
+            """Analyze the following application metadata and infer logical \
+architecture components.
+
+classes:
+{classes}
+
+methods:
+{methods}
+
+dependencies:
+{dependencies}
+
+code_analysis:
+{code_analysis}
+
+dependency_analysis:
+{dependency_analysis}
+
+risk_analysis:
+{risk_analysis}""",
+        ),
+    ]
+)
+
 MODERNIZATION_PROMPT = ChatPromptTemplate.from_messages(
     [
         (
@@ -52,6 +110,9 @@ dependency_analysis:
 risk_analysis:
 {risk_analysis}
 
+architecture_summary:
+{architecture_summary}
+
 dependencies:
 {dependencies}
 
@@ -75,6 +136,32 @@ class LLMService:
             )
         return self._llm
 
+    def generate_architecture_summary(self, context: dict) -> dict:
+        prompt = ARCHITECTURE_PROMPT.format_messages(
+            classes=json.dumps(context.get("classes", []), indent=2),
+            methods=json.dumps(context.get("methods", []), indent=2),
+            dependencies=json.dumps(
+                context.get("dependencies", []),
+                indent=2,
+            ),
+            code_analysis=json.dumps(
+                context.get("code_analysis", {}),
+                indent=2,
+            ),
+            dependency_analysis=json.dumps(
+                context.get("dependency_analysis", {}),
+                indent=2,
+            ),
+            risk_analysis=json.dumps(
+                context.get("risk_analysis", {}),
+                indent=2,
+            ),
+        )
+
+        response = self.llm.invoke(prompt)
+        content = self._extract_response_content(response.content)
+        return self._parse_architecture_response(content)
+
     def generate_modernization_strategy(self, context: dict) -> dict:
         retrieved_context = context.get("retrieved_context", [])
         if retrieved_context:
@@ -97,6 +184,10 @@ class LLMService:
                 context.get("risk_analysis", {}),
                 indent=2,
             ),
+            architecture_summary=json.dumps(
+                context.get("architecture_summary", {}),
+                indent=2,
+            ),
             dependencies=json.dumps(
                 context.get("dependencies", []),
                 indent=2,
@@ -105,8 +196,11 @@ class LLMService:
         )
 
         response = self.llm.invoke(prompt)
-        content = response.content
+        content = self._extract_response_content(response.content)
 
+        return self._parse_json_response(content)
+
+    def _extract_response_content(self, content: str | list) -> str:
         if isinstance(content, list):
             parts: list[str] = []
             for block in content:
@@ -116,7 +210,37 @@ class LLMService:
                     parts.append(str(block))
             content = "".join(parts)
 
-        return self._parse_json_response(str(content))
+        return str(content)
+
+    def _parse_architecture_response(self, content: str) -> dict:
+        cleaned = content.strip()
+
+        fence_match = re.search(
+            r"```(?:json)?\s*(.*?)\s*```",
+            cleaned,
+            re.DOTALL,
+        )
+        if fence_match:
+            cleaned = fence_match.group(1).strip()
+
+        result = json.loads(cleaned)
+
+        if "components" not in result:
+            raise ValueError("LLM response missing required field: components")
+
+        if not isinstance(result["components"], list):
+            raise ValueError("LLM response field 'components' must be a list")
+
+        for component in result["components"]:
+            if not isinstance(component, dict):
+                raise ValueError("Each component must be an object")
+            for field in ("name", "responsibility", "classes"):
+                if field not in component:
+                    raise ValueError(
+                        f"Component missing required field: {field}"
+                    )
+
+        return result
 
     def _parse_json_response(self, content: str) -> dict:
         cleaned = content.strip()

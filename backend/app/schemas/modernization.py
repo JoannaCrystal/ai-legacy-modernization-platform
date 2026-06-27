@@ -9,4 +9,5 @@ class ModernizationPlanResponse(BaseModel):
     code_analysis: dict
     dependency_analysis: dict
     risk_analysis: dict
+    architecture_summary: dict
     modernization_plan: dict

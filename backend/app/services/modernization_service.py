@@ -26,35 +26,70 @@ def generate_modernization_plan(project_id: int, db: Session) -> dict:
 
     state = {
         "project_id": project.id,
-        "classes": [{"name": code_class.name} for code_class in classes],
-        "methods": [{"name": code_method.name} for code_method in methods],
+        "classes": classes,
+        "methods": methods,
         "dependencies": dependencies,
     }
 
     return graph.invoke(state)
 
 
-def _load_classes(db: Session, code_file_ids: list[int]) -> list[CodeClass]:
+def _load_classes(db: Session, code_file_ids: list[int]) -> list[dict]:
     if not code_file_ids:
         return []
 
-    return (
-        db.query(CodeClass)
+    rows = (
+        db.query(CodeClass, CodeFile)
+        .join(CodeFile, CodeClass.code_file_id == CodeFile.id)
         .filter(CodeClass.code_file_id.in_(code_file_ids))
         .all()
     )
 
+    return [
+        {
+            "name": code_class.name,
+            "file": code_file.file_name or code_file.file_path,
+            "package": _infer_package(code_file.file_path),
+        }
+        for code_class, code_file in rows
+    ]
 
-def _load_methods(db: Session, code_file_ids: list[int]) -> list[CodeMethod]:
+
+def _load_methods(db: Session, code_file_ids: list[int]) -> list[dict]:
     if not code_file_ids:
         return []
 
-    return (
-        db.query(CodeMethod)
+    rows = (
+        db.query(CodeMethod, CodeClass)
         .join(CodeClass, CodeMethod.class_id == CodeClass.id)
         .filter(CodeClass.code_file_id.in_(code_file_ids))
         .all()
     )
+
+    return [
+        {
+            "name": code_method.name,
+            "class": code_class.name,
+            "return_type": code_method.return_type,
+        }
+        for code_method, code_class in rows
+    ]
+
+
+def _infer_package(file_path: str) -> str | None:
+    normalized = file_path.replace("\\", "/")
+    if "/src/" not in normalized:
+        return None
+
+    relative_path = normalized.split("/src/", 1)[1]
+    if "/" not in relative_path:
+        return None
+
+    package_path = relative_path.rsplit("/", 1)[0]
+    if not package_path:
+        return None
+
+    return package_path.replace("/", ".")
 
 
 def _load_dependencies(

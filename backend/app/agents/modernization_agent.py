@@ -19,6 +19,7 @@ class ModernizationAgent(BaseAgent):
         code_analysis = state.get("code_analysis", {})
         dependency_analysis = state.get("dependency_analysis", {})
         risk_analysis = state.get("risk_analysis", {})
+        architecture_summary = state.get("architecture_summary", {})
         dependencies = state.get("dependencies", [])
         retrieved_context = state.get("retrieved_context", [])
 
@@ -31,6 +32,7 @@ class ModernizationAgent(BaseAgent):
             "code_analysis": code_analysis,
             "dependency_analysis": dependency_analysis,
             "risk_analysis": risk_analysis,
+            "architecture_summary": architecture_summary,
             "dependencies": dependencies,
             "retrieved_context": retrieved_context,
         }
