@@ -4,6 +4,7 @@ import { BrowserRouter, Navigate, Route, Routes, useParams } from 'react-router-
 
 import AppLayout from './components/layout/AppLayout';
 import DashboardPage from './pages/DashboardPage';
+import HistoryPage from './pages/HistoryPage';
 import UploadPage from './pages/UploadPage';
 import theme from './theme';
 
@@ -33,6 +34,14 @@ export default function App() {
             }
           />
           <Route path="/dashboard/:projectId" element={<DashboardRoute />} />
+          <Route
+            path="/history"
+            element={
+              <AppLayout>
+                <HistoryPage />
+              </AppLayout>
+            }
+          />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

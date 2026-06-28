@@ -8,6 +8,7 @@ import ArchitectureSection from '../components/dashboard/ArchitectureSection';
 import BusinessCapabilitiesSection from '../components/dashboard/BusinessCapabilitiesSection';
 import DependencySection from '../components/dashboard/DependencySection';
 import ErrorAlert from '../components/dashboard/ErrorAlert';
+import ExportReportButton from '../components/dashboard/ExportReportButton';
 import LoadingState from '../components/dashboard/LoadingState';
 import ModernizationSection from '../components/dashboard/ModernizationSection';
 import RiskSection from '../components/dashboard/RiskSection';
@@ -42,11 +43,19 @@ export default function DashboardPage() {
 
   return (
     <Stack spacing={4}>
-      <BoxHeader
-        projectName={analysis.project_name}
-        projectId={analysis.project_id}
-        summary={analysis.summary}
-      />
+      <Stack
+        direction={{ xs: 'column', md: 'row' }}
+        justifyContent="space-between"
+        alignItems={{ xs: 'flex-start', md: 'center' }}
+        spacing={2}
+      >
+        <BoxHeader
+          projectName={analysis.project_name}
+          projectId={analysis.project_id}
+          summary={analysis.summary}
+        />
+        <ExportReportButton projectId={analysis.project_id} />
+      </Stack>
 
       <ArchitectureSection
         architectureSummary={modernization.architecture_summary}

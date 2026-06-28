@@ -1,6 +1,7 @@
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DashboardIcon from '@mui/icons-material/Dashboard';
+import HistoryIcon from '@mui/icons-material/History';
 import AppBar from '@mui/material/AppBar';
 import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
@@ -52,6 +53,21 @@ export default function Navbar({ projectId }: NavbarProps) {
             }}
           >
             Upload
+          </Button>
+
+          <Button
+            component={RouterLink}
+            to="/history"
+            color="inherit"
+            startIcon={<HistoryIcon />}
+            sx={{
+              mr: 1,
+              bgcolor: location.pathname === '/history'
+                ? 'rgba(255,255,255,0.12)'
+                : 'transparent',
+            }}
+          >
+            History
           </Button>
 
           {projectId !== null && projectId !== undefined && (

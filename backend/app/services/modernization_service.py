@@ -4,6 +4,10 @@ from app.agents.graph import graph
 from app.models.code_analysis import CodeClass, CodeDependency, CodeMethod
 from app.models.code_file import CodeFile
 from app.models.project import Project
+from app.services.analysis_persistence_service import (
+    get_latest_snapshot,
+    save_analysis_snapshot,
+)
 from app.services.dependency_intelligence_service import (
     DependencyIntelligenceService,
 )
@@ -14,6 +18,10 @@ def generate_modernization_plan(project_id: int, db: Session) -> dict:
     project = db.query(Project).filter(Project.id == project_id).first()
     if project is None:
         raise ProjectNotFoundError()
+
+    snapshot = get_latest_snapshot(db, project_id)
+    if snapshot is not None:
+        return snapshot.payload
 
     code_files = (
         db.query(CodeFile).filter(CodeFile.project_id == project_id).all()
@@ -31,7 +39,9 @@ def generate_modernization_plan(project_id: int, db: Session) -> dict:
         "dependencies": dependencies,
     }
 
-    return graph.invoke(state)
+    result = graph.invoke(state)
+    save_analysis_snapshot(db, project_id, result)
+    return result
 
 
 def _load_classes(db: Session, code_file_ids: list[int]) -> list[dict]:

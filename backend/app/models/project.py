@@ -8,6 +8,8 @@ from app.database.base import Base
 
 if TYPE_CHECKING:
     from app.models.code_file import CodeFile
+    from app.models.enterprise_report import EnterpriseReport
+    from app.models.project_analysis_snapshot import ProjectAnalysisSnapshot
 
 
 class Project(Base):
@@ -35,5 +37,11 @@ class Project(Base):
     )
 
     code_files: Mapped[list["CodeFile"]] = relationship(
+        back_populates="project",
+    )
+    analysis_snapshots: Mapped[list["ProjectAnalysisSnapshot"]] = relationship(
+        back_populates="project",
+    )
+    enterprise_reports: Mapped[list["EnterpriseReport"]] = relationship(
         back_populates="project",
     )

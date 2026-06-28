@@ -7,6 +7,7 @@ from app.api.analysis import router as analysis_router
 from app.api.knowledge import router as knowledge_router
 from app.api.modernization import router as modernization_router
 from app.api.projects import router as projects_router
+from app.api.reports import router as reports_router
 
 logging.basicConfig(
     level=logging.INFO,
@@ -33,6 +34,7 @@ app.add_middleware(
 app.include_router(projects_router)
 app.include_router(analysis_router)
 app.include_router(modernization_router)
+app.include_router(reports_router)
 app.include_router(knowledge_router)
 
 

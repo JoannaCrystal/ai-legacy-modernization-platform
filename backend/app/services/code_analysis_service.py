@@ -55,12 +55,21 @@ def _persist_methods(
     if not code_classes or not methods:
         return
 
-    first_class_id = code_classes[0].id
+    class_id_by_name = {
+        code_class.name: code_class.id for code_class in code_classes
+    }
+    default_class_id = code_classes[0].id
 
     for method_data in methods:
+        class_name = method_data.get("class_name")
+        class_id = (
+            class_id_by_name.get(str(class_name), default_class_id)
+            if class_name
+            else default_class_id
+        )
         db.add(
             CodeMethod(
-                class_id=first_class_id,
+                class_id=class_id,
                 name=str(method_data["name"]),
                 return_type=_optional_str(method_data.get("return_type")),
                 parameters=_optional_str(method_data.get("parameters")),

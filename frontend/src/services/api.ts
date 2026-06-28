@@ -49,4 +49,31 @@ export async function apiPostForm<T>(
   return response.json() as Promise<T>;
 }
 
+function extractFilename(contentDisposition: string | null): string | null {
+  if (!contentDisposition) {
+    return null;
+  }
+
+  const match = contentDisposition.match(/filename="(.+)"/);
+  return match?.[1] ?? null;
+}
+
+export async function downloadFromApi(
+  path: string,
+  method: 'GET' | 'POST' = 'GET',
+): Promise<{ blob: Blob; filename: string }> {
+  const response = await fetch(`${API_BASE_URL}${path}`, { method });
+
+  if (!response.ok) {
+    throw new ApiRequestError(await parseError(response), response.status);
+  }
+
+  const blob = await response.blob();
+  const filename =
+    extractFilename(response.headers.get('Content-Disposition')) ??
+    'modernization-report.pdf';
+
+  return { blob, filename };
+}
+
 export { API_BASE_URL };

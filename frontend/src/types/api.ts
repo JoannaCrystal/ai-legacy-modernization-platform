@@ -155,6 +155,25 @@ export interface ModernizationPlanResponse {
   modernization_roadmap: ModernizationRoadmap;
 }
 
+export interface ReportMetadata {
+  report_id: number;
+  project_id: number;
+  analysis_snapshot_id: number;
+  overall_risk: string;
+  generated_at: string;
+}
+
+export interface ProjectHistoryItem {
+  project_id: number;
+  project_name: string;
+  upload_date: string;
+  analysis_completed_at: string | null;
+  overall_risk: string | null;
+  analysis_status: string;
+  report_status: string;
+  latest_report_id: number | null;
+}
+
 export interface ApiError {
   detail: string;
 }
