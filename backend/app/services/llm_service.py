@@ -231,6 +231,80 @@ Relevant Enterprise Knowledge:
     ]
 )
 
+CODE_MODERNIZATION_PROMPT = ChatPromptTemplate.from_messages(
+    [
+        (
+            "system",
+            """You are an enterprise legacy code modernization specialist.
+
+Your job:
+Identify practical modernization opportunities for legacy application \
+components and generate illustrative migration guidance and example code.
+
+You must only recommend modernizations supported by the provided analysis \
+metadata, modernization plan, architecture report, and enterprise knowledge. \
+Do not invent technologies, classes, or patterns not present in the input.
+
+Rules:
+- Focus on individual legacy technologies and patterns, not full application \
+conversion.
+- Select candidate components that would benefit most from modernization.
+- Provide concise, readable example code that clearly replaces a specific \
+legacy implementation.
+- Examples should be illustrative, not production-ready.
+- Reference enterprise knowledge when applicable.
+- Return valid JSON only.
+
+Respond with valid JSON only using this structure:
+{{
+  "opportunities": [
+    {{
+      "component": "...",
+      "legacy_technology_or_pattern": "...",
+      "recommended_approach": "...",
+      "justification": "...",
+      "implementation_strategy": "...",
+      "example_modernized_code": "...",
+      "replaces": "...",
+      "migration_considerations": [],
+      "migration_risks": [],
+      "enterprise_references": []
+    }}
+  ]
+}}""",
+        ),
+        (
+            "human",
+            """Using the following application intelligence, identify \
+modernization opportunities and generate practical migration artifacts.
+
+code_analysis:
+{code_analysis}
+
+dependency_analysis:
+{dependency_analysis}
+
+risk_analysis:
+{risk_analysis}
+
+architecture_summary:
+{architecture_summary}
+
+business_capabilities:
+{business_capabilities}
+
+architecture_report:
+{architecture_report}
+
+modernization_plan:
+{modernization_plan}
+
+Relevant Enterprise Knowledge:
+{retrieved_context}""",
+        ),
+    ]
+)
+
 
 class LLMService:
     def __init__(self) -> None:
@@ -374,6 +448,51 @@ class LLMService:
 
         return self._parse_json_response(content)
 
+    def generate_code_modernization(self, context: dict) -> dict:
+        retrieved_context = context.get("retrieved_context", [])
+        if retrieved_context:
+            retrieved_context_text = "\n".join(
+                f"- {item}" for item in retrieved_context
+            )
+        else:
+            retrieved_context_text = "No enterprise knowledge retrieved."
+
+        prompt = CODE_MODERNIZATION_PROMPT.format_messages(
+            code_analysis=json.dumps(
+                context.get("code_analysis", {}),
+                indent=2,
+            ),
+            dependency_analysis=json.dumps(
+                context.get("dependency_analysis", {}),
+                indent=2,
+            ),
+            risk_analysis=json.dumps(
+                context.get("risk_analysis", {}),
+                indent=2,
+            ),
+            architecture_summary=json.dumps(
+                context.get("architecture_summary", {}),
+                indent=2,
+            ),
+            business_capabilities=json.dumps(
+                context.get("business_capabilities", {}),
+                indent=2,
+            ),
+            architecture_report=json.dumps(
+                context.get("architecture_report", {}),
+                indent=2,
+            ),
+            modernization_plan=json.dumps(
+                context.get("modernization_plan", {}),
+                indent=2,
+            ),
+            retrieved_context=retrieved_context_text,
+        )
+
+        response = self.llm.invoke(prompt)
+        content = self._extract_response_content(response.content)
+        return self._parse_code_modernization_response(content)
+
     def _extract_response_content(self, content: str | list) -> str:
         if isinstance(content, list):
             parts: list[str] = []
@@ -488,6 +607,63 @@ class LLMService:
         for field in list_fields:
             if not isinstance(result[field], list):
                 raise ValueError(f"LLM response field '{field}' must be a list")
+
+        return result
+
+    def _parse_code_modernization_response(self, content: str) -> dict:
+        cleaned = content.strip()
+
+        fence_match = re.search(
+            r"```(?:json)?\s*(.*?)\s*```",
+            cleaned,
+            re.DOTALL,
+        )
+        if fence_match:
+            cleaned = fence_match.group(1).strip()
+
+        result = json.loads(cleaned)
+
+        if "opportunities" not in result:
+            raise ValueError(
+                "LLM response missing required field: opportunities"
+            )
+
+        if not isinstance(result["opportunities"], list):
+            raise ValueError(
+                "LLM response field 'opportunities' must be a list"
+            )
+
+        required_fields = (
+            "component",
+            "legacy_technology_or_pattern",
+            "recommended_approach",
+            "justification",
+            "implementation_strategy",
+            "example_modernized_code",
+            "replaces",
+            "migration_considerations",
+            "migration_risks",
+            "enterprise_references",
+        )
+        list_fields = (
+            "migration_considerations",
+            "migration_risks",
+            "enterprise_references",
+        )
+
+        for opportunity in result["opportunities"]:
+            if not isinstance(opportunity, dict):
+                raise ValueError("Each opportunity must be an object")
+            for field in required_fields:
+                if field not in opportunity:
+                    raise ValueError(
+                        f"Opportunity missing required field: {field}"
+                    )
+            for field in list_fields:
+                if not isinstance(opportunity[field], list):
+                    raise ValueError(
+                        f"Opportunity field '{field}' must be a list"
+                    )
 
         return result
 

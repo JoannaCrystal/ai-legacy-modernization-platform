@@ -3,6 +3,7 @@ from langgraph.graph import END, START, StateGraph
 from app.agents.architecture_agent import ArchitectureUnderstandingAgent
 from app.agents.business_capability_agent import BusinessCapabilityAgent
 from app.agents.code_agent import CodeAnalyzerAgent
+from app.agents.code_modernization_agent import CodeModernizationAgent
 from app.agents.dependency_agent import DependencyAgent
 from app.agents.documentation_agent import DocumentationAgent
 from app.agents.knowledge_agent import KnowledgeAgent
@@ -18,6 +19,7 @@ business_capability_agent = BusinessCapabilityAgent()
 knowledge_agent = KnowledgeAgent()
 documentation_agent = DocumentationAgent()
 modernization_agent = ModernizationAgent()
+code_modernization_agent = CodeModernizationAgent()
 
 
 def build_graph():
@@ -37,6 +39,10 @@ def build_graph():
     graph.add_node("knowledge_agent", knowledge_agent.execute)
     graph.add_node("documentation_agent", documentation_agent.execute)
     graph.add_node("modernization_agent", modernization_agent.execute)
+    graph.add_node(
+        "code_modernization_agent",
+        code_modernization_agent.execute,
+    )
 
     graph.add_edge(START, "code_agent")
     graph.add_edge("code_agent", "dependency_agent")
@@ -46,7 +52,8 @@ def build_graph():
     graph.add_edge("business_capability_agent", "knowledge_agent")
     graph.add_edge("knowledge_agent", "documentation_agent")
     graph.add_edge("documentation_agent", "modernization_agent")
-    graph.add_edge("modernization_agent", END)
+    graph.add_edge("modernization_agent", "code_modernization_agent")
+    graph.add_edge("code_modernization_agent", END)
 
     return graph.compile()
 

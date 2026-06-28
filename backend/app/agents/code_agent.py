@@ -10,6 +10,7 @@ class CodeAnalyzerAgent(BaseAgent):
     name = "code_analyzer_agent"
 
     def execute(self, state: ModernizationState) -> ModernizationState:
+        self._log_pipeline_start()
         self._log_pipeline_step()
 
         classes = state.get("classes", [])

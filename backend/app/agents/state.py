@@ -14,3 +14,4 @@ class ModernizationState(TypedDict):
     retrieved_context: NotRequired[list[str]]
     architecture_report: NotRequired[dict]
     modernization_plan: NotRequired[dict]
+    code_modernization: NotRequired[dict]

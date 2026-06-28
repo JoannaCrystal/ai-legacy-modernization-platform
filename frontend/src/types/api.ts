@@ -96,6 +96,23 @@ export interface ModernizationPlan {
   recommendations?: string[];
 }
 
+export interface CodeModernizationOpportunity {
+  component: string;
+  legacy_technology_or_pattern: string;
+  recommended_approach: string;
+  justification: string;
+  implementation_strategy: string;
+  example_modernized_code: string;
+  replaces: string;
+  migration_considerations: string[];
+  migration_risks: string[];
+  enterprise_references: string[];
+}
+
+export interface CodeModernization {
+  opportunities: CodeModernizationOpportunity[];
+}
+
 export interface ModernizationPlanResponse {
   project_id: number;
   classes: Array<{ name: string; file: string; package: string | null }>;
@@ -112,6 +129,7 @@ export interface ModernizationPlanResponse {
   business_capabilities: BusinessCapabilities;
   architecture_report: ArchitectureReport;
   modernization_plan: ModernizationPlan;
+  code_modernization: CodeModernization;
 }
 
 export interface ApiError {

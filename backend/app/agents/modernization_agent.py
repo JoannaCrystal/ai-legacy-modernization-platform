@@ -9,7 +9,6 @@ logger = logging.getLogger(__name__)
 
 class ModernizationAgent(BaseAgent):
     name = "modernization_agent"
-    is_pipeline_final = True
 
     def __init__(self) -> None:
         self.llm_service = LLMService()

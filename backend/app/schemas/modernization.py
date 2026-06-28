@@ -13,3 +13,4 @@ class ModernizationPlanResponse(BaseModel):
     business_capabilities: dict
     architecture_report: dict
     modernization_plan: dict
+    code_modernization: dict

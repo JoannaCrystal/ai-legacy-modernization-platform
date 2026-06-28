@@ -214,6 +214,14 @@ def test_graph_runs_new_agents_and_stores_outputs(
     )
     graph_module.modernization_agent.llm_service = modernization_llm
 
+    code_modernization_llm = MagicMock()
+    code_modernization_llm.generate_code_modernization.return_value = {
+        "opportunities": []
+    }
+    graph_module.code_modernization_agent.llm_service = (
+        code_modernization_llm
+    )
+
     mock_retriever_cls.return_value.retrieve.return_value = []
 
     graph = build_graph()
