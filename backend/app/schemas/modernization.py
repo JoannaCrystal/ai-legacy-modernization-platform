@@ -14,3 +14,4 @@ class ModernizationPlanResponse(BaseModel):
     architecture_report: dict
     modernization_plan: dict
     code_modernization: dict
+    modernization_roadmap: dict

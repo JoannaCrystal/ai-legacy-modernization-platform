@@ -7,8 +7,8 @@ from app.services.llm_service import LLMService
 logger = logging.getLogger(__name__)
 
 
-class CodeModernizationAgent(BaseAgent):
-    name = "code_modernization_agent"
+class ModernizationRoadmapAgent(BaseAgent):
+    name = "modernization_roadmap_agent"
 
     def __init__(self) -> None:
         self.llm_service = LLMService()
@@ -24,18 +24,21 @@ class CodeModernizationAgent(BaseAgent):
             "business_capabilities": state.get("business_capabilities", {}),
             "architecture_report": state.get("architecture_report", {}),
             "modernization_plan": state.get("modernization_plan", {}),
+            "code_modernization": state.get("code_modernization", {}),
             "retrieved_context": state.get("retrieved_context", []),
         }
 
         try:
-            code_modernization = self.llm_service.generate_code_modernization(
-                context
+            modernization_roadmap = (
+                self.llm_service.generate_modernization_roadmap(context)
             )
-            state["code_modernization"] = code_modernization
+            state["modernization_roadmap"] = modernization_roadmap
         except Exception as exc:
             logger.error(
                 "%s LLM generation failed: %s", self.name, exc, exc_info=True
             )
-            state["code_modernization"] = {"opportunities": []}
+            state["modernization_roadmap"] = {"phases": []}
+
+        self._log_pipeline_end()
 
         return state

@@ -113,6 +113,28 @@ export interface CodeModernization {
   opportunities: CodeModernizationOpportunity[];
 }
 
+export interface ModernizationRoadmapItem {
+  component: string;
+  business_capability: string;
+  technical_risk: string;
+  priority: string;
+  business_impact: string;
+  implementation_complexity: string;
+  recommended_action: string;
+  dependencies: string[];
+  expected_outcome: string;
+}
+
+export interface ModernizationRoadmapPhase {
+  phase: number;
+  title: string;
+  items: ModernizationRoadmapItem[];
+}
+
+export interface ModernizationRoadmap {
+  phases: ModernizationRoadmapPhase[];
+}
+
 export interface ModernizationPlanResponse {
   project_id: number;
   classes: Array<{ name: string; file: string; package: string | null }>;
@@ -130,6 +152,7 @@ export interface ModernizationPlanResponse {
   architecture_report: ArchitectureReport;
   modernization_plan: ModernizationPlan;
   code_modernization: CodeModernization;
+  modernization_roadmap: ModernizationRoadmap;
 }
 
 export interface ApiError {

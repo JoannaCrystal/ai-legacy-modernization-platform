@@ -186,6 +186,10 @@ def test_graph_runs_code_modernization_agent_after_modernization(
         code_modernization_llm
     )
 
+    roadmap_llm = MagicMock()
+    roadmap_llm.generate_modernization_roadmap.return_value = {"phases": []}
+    graph_module.modernization_roadmap_agent.llm_service = roadmap_llm
+
     mock_retriever_cls.return_value.retrieve.return_value = []
 
     graph = build_graph()

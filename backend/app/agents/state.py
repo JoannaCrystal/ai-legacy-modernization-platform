@@ -15,3 +15,4 @@ class ModernizationState(TypedDict):
     architecture_report: NotRequired[dict]
     modernization_plan: NotRequired[dict]
     code_modernization: NotRequired[dict]
+    modernization_roadmap: NotRequired[dict]

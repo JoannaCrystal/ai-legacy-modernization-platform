@@ -8,6 +8,7 @@ from app.agents.dependency_agent import DependencyAgent
 from app.agents.documentation_agent import DocumentationAgent
 from app.agents.knowledge_agent import KnowledgeAgent
 from app.agents.modernization_agent import ModernizationAgent
+from app.agents.modernization_roadmap_agent import ModernizationRoadmapAgent
 from app.agents.risk_agent import RiskAgent
 from app.agents.state import ModernizationState
 
@@ -20,6 +21,7 @@ knowledge_agent = KnowledgeAgent()
 documentation_agent = DocumentationAgent()
 modernization_agent = ModernizationAgent()
 code_modernization_agent = CodeModernizationAgent()
+modernization_roadmap_agent = ModernizationRoadmapAgent()
 
 
 def build_graph():
@@ -43,6 +45,10 @@ def build_graph():
         "code_modernization_agent",
         code_modernization_agent.execute,
     )
+    graph.add_node(
+        "modernization_roadmap_agent",
+        modernization_roadmap_agent.execute,
+    )
 
     graph.add_edge(START, "code_agent")
     graph.add_edge("code_agent", "dependency_agent")
@@ -53,7 +59,8 @@ def build_graph():
     graph.add_edge("knowledge_agent", "documentation_agent")
     graph.add_edge("documentation_agent", "modernization_agent")
     graph.add_edge("modernization_agent", "code_modernization_agent")
-    graph.add_edge("code_modernization_agent", END)
+    graph.add_edge("code_modernization_agent", "modernization_roadmap_agent")
+    graph.add_edge("modernization_roadmap_agent", END)
 
     return graph.compile()
 

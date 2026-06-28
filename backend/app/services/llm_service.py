@@ -305,6 +305,88 @@ Relevant Enterprise Knowledge:
     ]
 )
 
+MODERNIZATION_ROADMAP_PROMPT = ChatPromptTemplate.from_messages(
+    [
+        (
+            "system",
+            """You are an enterprise modernization program architect.
+
+Your job:
+Transform existing modernization analysis into a prioritized, phased \
+execution roadmap that organizations can use to plan modernization \
+initiatives.
+
+You must only use components, capabilities, technologies, and \
+recommendations present in the provided analysis and enterprise \
+knowledge. Do not invent application elements not identified earlier.
+
+Rules:
+- Organize work into sequential phases with prerequisite activities first.
+- Prioritize using high-risk dependencies, business-critical capabilities, \
+component dependencies, technical debt, modernization complexity, and \
+enterprise best practices.
+- Produce a realistic, executable roadmap rather than a flat list.
+- Each phase must contain actionable items with clear outcomes.
+- Return valid JSON only.
+
+Respond with valid JSON only using this structure:
+{{
+  "phases": [
+    {{
+      "phase": 1,
+      "title": "...",
+      "items": [
+        {{
+          "component": "...",
+          "business_capability": "...",
+          "technical_risk": "...",
+          "priority": "High",
+          "business_impact": "High",
+          "implementation_complexity": "Medium",
+          "recommended_action": "...",
+          "dependencies": [],
+          "expected_outcome": "..."
+        }}
+      ]
+    }}
+  ]
+}}""",
+        ),
+        (
+            "human",
+            """Using the following application intelligence, generate a \
+prioritized modernization roadmap.
+
+code_analysis:
+{code_analysis}
+
+dependency_analysis:
+{dependency_analysis}
+
+risk_analysis:
+{risk_analysis}
+
+architecture_summary:
+{architecture_summary}
+
+business_capabilities:
+{business_capabilities}
+
+architecture_report:
+{architecture_report}
+
+modernization_plan:
+{modernization_plan}
+
+code_modernization:
+{code_modernization}
+
+Relevant Enterprise Knowledge:
+{retrieved_context}""",
+        ),
+    ]
+)
+
 
 class LLMService:
     def __init__(self) -> None:
@@ -493,6 +575,55 @@ class LLMService:
         content = self._extract_response_content(response.content)
         return self._parse_code_modernization_response(content)
 
+    def generate_modernization_roadmap(self, context: dict) -> dict:
+        retrieved_context = context.get("retrieved_context", [])
+        if retrieved_context:
+            retrieved_context_text = "\n".join(
+                f"- {item}" for item in retrieved_context
+            )
+        else:
+            retrieved_context_text = "No enterprise knowledge retrieved."
+
+        prompt = MODERNIZATION_ROADMAP_PROMPT.format_messages(
+            code_analysis=json.dumps(
+                context.get("code_analysis", {}),
+                indent=2,
+            ),
+            dependency_analysis=json.dumps(
+                context.get("dependency_analysis", {}),
+                indent=2,
+            ),
+            risk_analysis=json.dumps(
+                context.get("risk_analysis", {}),
+                indent=2,
+            ),
+            architecture_summary=json.dumps(
+                context.get("architecture_summary", {}),
+                indent=2,
+            ),
+            business_capabilities=json.dumps(
+                context.get("business_capabilities", {}),
+                indent=2,
+            ),
+            architecture_report=json.dumps(
+                context.get("architecture_report", {}),
+                indent=2,
+            ),
+            modernization_plan=json.dumps(
+                context.get("modernization_plan", {}),
+                indent=2,
+            ),
+            code_modernization=json.dumps(
+                context.get("code_modernization", {}),
+                indent=2,
+            ),
+            retrieved_context=retrieved_context_text,
+        )
+
+        response = self.llm.invoke(prompt)
+        content = self._extract_response_content(response.content)
+        return self._parse_modernization_roadmap_response(content)
+
     def _extract_response_content(self, content: str | list) -> str:
         if isinstance(content, list):
             parts: list[str] = []
@@ -663,6 +794,60 @@ class LLMService:
                 if not isinstance(opportunity[field], list):
                     raise ValueError(
                         f"Opportunity field '{field}' must be a list"
+                    )
+
+        return result
+
+    def _parse_modernization_roadmap_response(self, content: str) -> dict:
+        cleaned = content.strip()
+
+        fence_match = re.search(
+            r"```(?:json)?\s*(.*?)\s*```",
+            cleaned,
+            re.DOTALL,
+        )
+        if fence_match:
+            cleaned = fence_match.group(1).strip()
+
+        result = json.loads(cleaned)
+
+        if "phases" not in result:
+            raise ValueError("LLM response missing required field: phases")
+
+        if not isinstance(result["phases"], list):
+            raise ValueError("LLM response field 'phases' must be a list")
+
+        item_fields = (
+            "component",
+            "business_capability",
+            "technical_risk",
+            "priority",
+            "business_impact",
+            "implementation_complexity",
+            "recommended_action",
+            "dependencies",
+            "expected_outcome",
+        )
+
+        for phase in result["phases"]:
+            if not isinstance(phase, dict):
+                raise ValueError("Each phase must be an object")
+            for field in ("phase", "title", "items"):
+                if field not in phase:
+                    raise ValueError(f"Phase missing required field: {field}")
+            if not isinstance(phase["items"], list):
+                raise ValueError("Phase field 'items' must be a list")
+            for item in phase["items"]:
+                if not isinstance(item, dict):
+                    raise ValueError("Each roadmap item must be an object")
+                for field in item_fields:
+                    if field not in item:
+                        raise ValueError(
+                            f"Roadmap item missing required field: {field}"
+                        )
+                if not isinstance(item["dependencies"], list):
+                    raise ValueError(
+                        "Roadmap item field 'dependencies' must be a list"
                     )
 
         return result
