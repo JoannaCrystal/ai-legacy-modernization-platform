@@ -1,3 +1,5 @@
+import pytest
+
 from pathlib import Path
 
 from app.analyzers.java_analyzer import JavaAnalyzer
@@ -225,6 +227,7 @@ import com.bank.PaymentClient;
         }
 
 
+@pytest.mark.integration
 def test_ingestion_method_count() -> None:
     import io
     import zipfile

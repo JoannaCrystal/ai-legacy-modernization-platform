@@ -3,15 +3,12 @@ import logging
 from langchain_openai import OpenAIEmbeddings
 
 from app.core.config import settings  # noqa: F401
+from app.core.exceptions import EmbeddingGenerationError
 
 logger = logging.getLogger(__name__)
 
 EMBEDDING_DIMENSIONS = 1536
 EMBEDDING_MODEL = "text-embedding-3-small"
-
-
-class EmbeddingGenerationError(Exception):
-    """Raised when text embedding generation fails."""
 
 
 class EmbeddingService:

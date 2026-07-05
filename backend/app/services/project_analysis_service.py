@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 
+from app.core.exceptions import ProjectNotFoundError
 from app.models.code_analysis import CodeClass, CodeDependency, CodeMethod
 from app.models.code_file import CodeFile
 from app.models.project import Project
@@ -13,10 +14,6 @@ from app.schemas.analysis import (
 from app.services.dependency_intelligence_service import (
     DependencyIntelligenceService,
 )
-
-
-class ProjectNotFoundError(Exception):
-    pass
 
 
 def get_project_analysis(

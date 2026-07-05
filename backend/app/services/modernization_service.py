@@ -1,6 +1,11 @@
+import logging
+import time
+
 from sqlalchemy.orm import Session
 
 from app.agents.graph import graph
+from app.core.exceptions import ProjectNotFoundError
+from app.core.logging_config import log_with_context
 from app.models.code_analysis import CodeClass, CodeDependency, CodeMethod
 from app.models.code_file import CodeFile
 from app.models.project import Project
@@ -11,16 +16,24 @@ from app.services.analysis_persistence_service import (
 from app.services.dependency_intelligence_service import (
     DependencyIntelligenceService,
 )
-from app.services.project_analysis_service import ProjectNotFoundError
+
+logger = logging.getLogger(__name__)
 
 
 def generate_modernization_plan(project_id: int, db: Session) -> dict:
+    start_time = time.perf_counter()
     project = db.query(Project).filter(Project.id == project_id).first()
     if project is None:
         raise ProjectNotFoundError()
 
     snapshot = get_latest_snapshot(db, project_id)
     if snapshot is not None:
+        log_with_context(
+            logger,
+            logging.INFO,
+            "Modernization plan served from cache",
+            project_id=project_id,
+        )
         return snapshot.payload
 
     code_files = (
@@ -39,8 +52,23 @@ def generate_modernization_plan(project_id: int, db: Session) -> dict:
         "dependencies": dependencies,
     }
 
+    log_with_context(
+        logger,
+        logging.INFO,
+        "Modernization execution started",
+        project_id=project_id,
+    )
     result = graph.invoke(state)
     save_analysis_snapshot(db, project_id, result)
+
+    duration_ms = round((time.perf_counter() - start_time) * 1000, 2)
+    log_with_context(
+        logger,
+        logging.INFO,
+        "Modernization execution completed",
+        project_id=project_id,
+        duration_ms=duration_ms,
+    )
     return result
 
 

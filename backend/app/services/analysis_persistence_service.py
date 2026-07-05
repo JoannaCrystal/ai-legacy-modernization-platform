@@ -6,10 +6,6 @@ from app.models.project import Project
 from app.models.project_analysis_snapshot import ProjectAnalysisSnapshot
 
 
-class AnalysisNotFoundError(Exception):
-    pass
-
-
 def get_latest_snapshot(
     db: Session,
     project_id: int,

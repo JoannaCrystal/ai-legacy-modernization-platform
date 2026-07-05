@@ -1,25 +1,24 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.database.session import get_db
 from app.schemas.analysis import ProjectAnalysisResponse
-from app.services.project_analysis_service import (
-    ProjectNotFoundError,
-    get_project_analysis,
-)
+from app.services.project_analysis_service import get_project_analysis
 
 router = APIRouter(prefix="/projects", tags=["analysis"])
 
 
-@router.get("/{project_id}/analysis", response_model=ProjectAnalysisResponse)
+@router.get(
+    "/{project_id}/analysis",
+    response_model=ProjectAnalysisResponse,
+    summary="Get static analysis results",
+    description=(
+        "Returns classes, methods, dependencies, and summary metrics "
+        "produced during project ingestion."
+    ),
+)
 def get_analysis(
     project_id: int,
     db: Session = Depends(get_db),
 ) -> ProjectAnalysisResponse:
-    try:
-        return get_project_analysis(db, project_id)
-    except ProjectNotFoundError as exc:
-        raise HTTPException(
-            status_code=404,
-            detail="Project not found",
-        ) from exc
+    return get_project_analysis(db, project_id)
