@@ -330,15 +330,48 @@ git clone https://github.com/your-username/ai-legacy-modernization-platform.git
 cd ai-legacy-modernization-platform
 ```
 
-### 2. Start the database
+### 2. Run with Docker Compose (recommended)
+
+Ensure `backend/.env` contains your `OPENAI_API_KEY` (see `backend/.env.example`).
 
 ```bash
-docker compose up -d
+docker compose up --build
+```
+
+This starts all three services:
+
+| Service | URL | Description |
+|---------|-----|-------------|
+| Frontend | http://localhost:8080 | React production build (nginx) |
+| Backend API | http://localhost:8000 | FastAPI application |
+| Swagger UI | http://localhost:8000/docs | Interactive API documentation |
+| PostgreSQL | localhost:5432 | pgvector-enabled database |
+
+The backend connects to PostgreSQL using the Docker service name `postgres`. Database migrations run automatically on startup. The frontend is built with `VITE_API_BASE_URL=http://localhost:8000` so browser requests reach the published backend port.
+
+To run detached:
+
+```bash
+docker compose up --build -d
+```
+
+Stop the stack:
+
+```bash
+docker compose down
+```
+
+### 3. Manual local development (alternative)
+
+Start only the database:
+
+```bash
+docker compose up -d postgres
 ```
 
 This starts PostgreSQL 16 with the pgvector extension on port `5432`.
 
-### 3. Backend setup
+### 4. Backend setup
 
 ```bash
 cd backend
@@ -349,7 +382,7 @@ cp .env.example .env            # Edit with your OpenAI API key
 alembic upgrade head
 ```
 
-### 4. Run the backend
+### 5. Run the backend
 
 ```bash
 cd backend
@@ -359,7 +392,7 @@ uvicorn app.main:app --reload
 
 The API will be available at `http://127.0.0.1:8000`. Swagger UI: `http://127.0.0.1:8000/docs`.
 
-### 5. Frontend setup
+### 6. Frontend setup
 
 ```bash
 cd frontend
@@ -370,7 +403,7 @@ npm run dev
 
 The UI will be available at `http://127.0.0.1:5173`.
 
-### 6. Ingest the knowledge base (optional)
+### 7. Ingest the knowledge base (optional)
 
 Before running modernization analysis, ingest reference documents for RAG retrieval:
 

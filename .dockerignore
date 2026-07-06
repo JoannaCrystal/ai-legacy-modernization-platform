@@ -1,0 +1,25 @@
+# Git and IDE
+.git/
+.gitignore
+.vscode/
+.cursor/
+
+# Backend (excluded from root-context build where not needed)
+backend/venv/
+backend/.venv/
+backend/__pycache__/
+backend/.pytest_cache/
+backend/.env
+backend/.env.*
+!backend/.env.example
+
+# Frontend (not copied into backend image)
+frontend/node_modules/
+frontend/dist/
+
+# Local artifacts
+**/*.pyc
+**/__pycache__/
+**/*.log
+**/.DS_Store
+test-legacy-app.zip
